@@ -2,6 +2,8 @@ const User = require("../models/users/User");
 const bcrypt = require("bcryptjs");
 const sendResponse = require("../utils/responseHelper");
 const jwt = require("jsonwebtoken");
+const authService = require('../services/userService')
+const _ = require('lodash')
 
 const generateToken = (userId, email) => {
   return jwt.sign({ id: userId, email: email }, process.env.JWT_SECRET, {
@@ -12,43 +14,45 @@ const generateToken = (userId, email) => {
 // Register a new user
 const registerUser = async (req, res) => {
   try {
-    const { firstName, lastName, email, phoneNumber, countryCode, password } =
-      req.body;
+    const { firstName, lastName, email, phoneNumber, countryCode, password } = req.body;
 
-    // Check if user exists
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "User already exists" });
+    if(_.isEmpty(firstName))
+      return sendResponse(res, 200, "firstName should not be empty or null");
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create new user
-    const newUser = new User({
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      countryCode,
-      password: hashedPassword,
-    });
-    const token = generateToken(newUser._id, newUser.email);
-    newUser.token = token;
-    await newUser.save();
+    if(_.isEmpty(lastName))
+      return sendResponse(res, 200, "lastName should not be empty or null");
 
+    if(_.isEmpty(email))
+      return sendResponse(res, 200, "Email should not be empty or null");
+
+    if(_.isEmpty(phoneNumber))
+      return sendResponse(res, 200, "phoneNumber should not be empty or null");
+
+    if(_.isEmpty(countryCode))
+      return sendResponse(res, 200, "countryCode should not be empty or null");
+
+    if(_.isEmpty(password))
+      return sendResponse(res, 200, "password should not be empty or null");
+
+    const newUser = await authService.registerUser({firstName,lastName,email,phoneNumber,countryCode,password},res);
     return sendResponse(res, 200, "User registered successfully", newUser);
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    return res.status(400).json({ error: err.message });
   }
 };
 
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email }); // Find user
-    if (!user) return sendResponse(res, 404, "User not found");
-    const isMatch = await bcrypt.compare(password, user.password); // Compare password
-    if (!isMatch) return sendResponse(res, 401, "Invalid credentials");
+
+    if(_.isEmpty(email))
+      return sendResponse(res, 200, "Email should not be empty or null");
+
+    if(_.isEmpty(password))
+      return sendResponse(res, 200, "Password should not be empty or null");
+
+    const user = await authService.loginUser(email,password,res);
     return sendResponse(res, 200, "Login successful", user);
   } catch (err) {
     return sendResponse(res, 200, err.message);
