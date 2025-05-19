@@ -17,28 +17,30 @@ const registerUser = async (req, res) => {
     const { firstName, lastName, email, phoneNumber, countryCode, password } = req.body;
 
     if(_.isEmpty(firstName))
-      return sendResponse(res, 200, "firstName should not be empty or null");
+      return sendResponse(res, 200, "FirstName should not be empty or null");
 
 
     if(_.isEmpty(lastName))
-      return sendResponse(res, 200, "lastName should not be empty or null");
+      return sendResponse(res, 200, "LastName should not be empty or null");
 
     if(_.isEmpty(email))
       return sendResponse(res, 200, "Email should not be empty or null");
 
     if(_.isEmpty(phoneNumber))
-      return sendResponse(res, 200, "phoneNumber should not be empty or null");
+      return sendResponse(res, 200, "PhoneNumber should not be empty or null");
 
     if(_.isEmpty(countryCode))
-      return sendResponse(res, 200, "countryCode should not be empty or null");
+      return sendResponse(res, 200, "CountryCode should not be empty or null");
 
     if(_.isEmpty(password))
-      return sendResponse(res, 200, "password should not be empty or null");
+      return sendResponse(res, 200, "Password should not be empty or null");
 
-    const newUser = await authService.registerUser({firstName,lastName,email,phoneNumber,countryCode,password},res);
+    const newUser = await authService.registerUser({firstName,lastName,email,phoneNumber,countryCode,password});
     return sendResponse(res, 200, "User registered successfully", newUser);
+
   } catch (err) {
-    return res.status(400).json({ error: err.message });
+    const statusCode = err.statusCode || 500;
+    sendResponse(res, statusCode, { message: err.message || "Internal server error" });
   }
 };
 
@@ -55,29 +57,31 @@ const loginUser = async (req, res) => {
     const user = await authService.loginUser(email,password,res);
     return sendResponse(res, 200, "Login successful", user);
   } catch (err) {
-    return sendResponse(res, 200, err.message);
+     const statusCode = err.statusCode || 500;
+    return sendResponse(res, statusCode, { message: err.message || "Internal server error" });
   }
 };
 
 const fetchProfile = async (req, res) => {
   try {
     const { _id } = req.body;
-    const user = await User.findOne({ _id: _id }); // Find user
-    if (!user) return sendResponse(res, 404, "User not found");
+    const user = await authService.fetchProfile(_id);
     return sendResponse(res, 200, "Profile fetched successfully", user);
   } catch (err) {
-    return sendResponse(res, 500, err.message);
+    const statusCode = err.statusCode || 500;
+    return sendResponse(res, statusCode, { message: err.message || "Internal server error" });
   }
 };
 
 const getAllUsers = async (req, res) => {
   try {
     const filters = req.query;
-    const allUsers = await User.find(filters);
+    const allUsers = await authService.getAllUsers(filters)
     if (!allUsers) sendResponse(res, 404, "No data found");
     return sendResponse(res, 200, "Users data fetched successfully", allUsers);
   } catch (err) {
-    return sendResponse(res, 500, err.message);
+    const statusCode = err.statusCode || 500;
+    return sendResponse(res, statusCode, { message: err.message || "Internal server error" });
   }
 };
 
@@ -92,7 +96,8 @@ const logoutUser = async (req, res) => {
 
     return sendResponse(res, 200, "Logout successful", allUsers);
   } catch (err) {
-    return sendResponse(res, 500, err.message);
+    const statusCode = err.statusCode || 500;
+    return sendResponse(res, statusCode, { message: err.message || "Internal server error" });
   }
 };
 
