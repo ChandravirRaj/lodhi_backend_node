@@ -5,11 +5,6 @@ const jwt = require("jsonwebtoken");
 const authService = require('../services/userService')
 const _ = require('lodash')
 
-const generateToken = (userId, email) => {
-  return jwt.sign({ id: userId, email: email }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
-  });
-};
 
 // Register a new user
 const registerUser = async (req, res) => {
@@ -37,8 +32,8 @@ const registerUser = async (req, res) => {
 
     const newUser = await authService.registerUser({firstName,lastName,email,phoneNumber,countryCode,password});
     return sendResponse(res, 200, "User registered successfully", newUser);
-
   } catch (err) {
+
     const statusCode = err.statusCode || 500;
     sendResponse(res, statusCode, { message: err.message || "Internal server error" });
   }
@@ -75,10 +70,11 @@ const fetchProfile = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
   try {
+
     const filters = req.query;
     const allUsers = await authService.getAllUsers(filters)
-    if (!allUsers) sendResponse(res, 404, "No data found");
     return sendResponse(res, 200, "Users data fetched successfully", allUsers);
+    
   } catch (err) {
     const statusCode = err.statusCode || 500;
     return sendResponse(res, statusCode, { message: err.message || "Internal server error" });
@@ -87,14 +83,11 @@ const getAllUsers = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   try {
+
     const { userId } = req.body;
-    const user = await User.findById(userId);
-    if (!user) sendResponse(res, 404, "User not found");
+    const user = await authService.logoutUser(userId);
+    return sendResponse(res, 200, "Logout successful", user);
 
-    user.token = null; // or `""`
-    await user.save();
-
-    return sendResponse(res, 200, "Logout successful", allUsers);
   } catch (err) {
     const statusCode = err.statusCode || 500;
     return sendResponse(res, statusCode, { message: err.message || "Internal server error" });

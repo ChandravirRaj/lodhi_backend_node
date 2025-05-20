@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,   // Trims spaces
   },
+  
   email: {
     type: String,
     required: true,
@@ -39,7 +40,7 @@ const userSchema = new mongoose.Schema({
 
   token: {
     type: String,
-    required: true,
+    default: null, 
     minlength: 6, // Minimum length of password
     // select: false
   },
